@@ -25,28 +25,6 @@ NINFER_BIN="$BIN_DIR/ninfer"
 NO_LAUNCH=0
 PREVIEW=0
 
-if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
-    RESET=$(printf '\033[0m')
-    BOLD=$(printf '\033[1m')
-    CYAN=$(printf '\033[36m')
-    MAGENTA=$(printf '\033[35m')
-    BLUE=$(printf '\033[34m')
-    GREEN=$(printf '\033[32m')
-    YELLOW=$(printf '\033[33m')
-    RED=$(printf '\033[31m')
-    DIM=$(printf '\033[2m')
-else
-    RESET=''
-    BOLD=''
-    CYAN=''
-    MAGENTA=''
-    BLUE=''
-    GREEN=''
-    YELLOW=''
-    RED=''
-    DIM=''
-fi
-
 usage() {
     cat <<'EOF'
 Usage: install.sh [--no-launch] [--preview]
@@ -60,30 +38,20 @@ EOF
 }
 
 log() {
-    printf '\n%s%s▸ [ARASAKA] %s%s\n' "$BOLD" "$CYAN" "$*" "$RESET"
+    printf '\n==> %s\n' "$*"
 }
 
 info() {
-    printf '%s    · [NODE] %s%s\n' "$DIM" "$*" "$RESET"
+    printf '    %s\n' "$*"
 }
 
 success() {
-    printf '%s    ✅ [OK] %s%s\n' "$GREEN" "$*" "$RESET"
+    printf '    [OK] %s\n' "$*"
 }
 
 die() {
-    printf '\n%s❌ ERROR:%s %s\n' "$RED" "$RESET" "$*" >&2
+    printf '\nERROR: %s\n' "$*" >&2
     exit 1
-}
-
-banner() {
-    printf '\n%s%s╔════════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s║   A R A S A K A  //  BLACKWALL NODE DEPLOYMENT            ║%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s║   ────────────────────────────────────────────────────────   ║%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s║   ⚡ RTX 5090  •  Qwen3.8 27B  •  NVFP4  •  240K CTX     ║%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s║   🤖 CLASSIFIED NEURAL INFRASTRUCTURE  //  LOCAL ONLY      ║%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s╚════════════════════════════════════════════════════════════╝%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s  ◉ Secure node provisioning · CUDA 13.1 · Oh My Pi%s\n' "$DIM" "$RESET"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -105,22 +73,16 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-banner
-
 if [ "$PREVIEW" -eq 1 ]; then
-    log "Preview mode engaged"
-    info "No system changes will be made. Rendering the operator interface only."
-    success "Hardware perimeter authenticated: RTX 5090"
-    success "Blackwall node dependencies staged"
-    success "CUDA 13.1 compute layer initialized"
-    success "Qwen3.8-27B NVFP4 model core ready"
-    info "Establishing neural link..."
-    printf '%s⏳ Neural core loading... 00:42 elapsed%s\n' "$YELLOW" "$RESET"
-    success "Blackwall node online at http://127.0.0.1:8080/v1/models"
-    printf '\n%s%s╔════════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$GREEN" "$RESET"
-    printf '%s%s║   ✅ BLACKWALL NODE DEPLOYMENT COMPLETE                   ║%s\n' "$BOLD" "$GREEN" "$RESET"
-    printf '%s%s║   Preview complete. No files or services were changed.    ║%s\n' "$BOLD" "$GREEN" "$RESET"
-    printf '%s%s╚════════════════════════════════════════════════════════════╝%s\n' "$BOLD" "$GREEN" "$RESET"
+    printf '\nPreview mode: no system changes will be made.\n'
+    success "RTX 5090 detected"
+    success "Build dependencies ready"
+    success "CUDA 13.1 ready"
+    success "NInfer server ready"
+    success "Qwen3.8-27B NVFP4 model verified"
+    info "Loading model and starting the service..."
+    success "Service ready at http://127.0.0.1:8080/v1/models"
+    printf '\nPreview complete.\n'
     exit 0
 fi
 
@@ -139,7 +101,7 @@ run_root() {
     fi
 }
 
-log "Authenticating hardware and network perimeter"
+log "Checking WSL, GPU, and disk space"
 if [ ! -r /proc/sys/kernel/osrelease ] || ! grep -qi microsoft /proc/sys/kernel/osrelease; then
     die "This installer must run inside WSL2 Ubuntu, not Windows or native Linux."
 fi
@@ -174,7 +136,7 @@ if [ "$AVAILABLE_GB" -lt "$REQUIRED_GB" ]; then
 fi
 success "Free disk: ${AVAILABLE_GB} GB"
 
-log "Deploying node dependencies"
+log "Installing build dependencies"
 MISSING_PACKAGES=""
 for PACKAGE in build-essential cmake ninja-build git curl ca-certificates procps pkg-config \
     libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libcurl4-openssl-dev; do
@@ -191,7 +153,7 @@ else
     success "Build dependencies already installed"
 fi
 
-log "Initializing Blackwell compute layer"
+log "Ensuring CUDA 13.1 is installed"
 if [ ! -x "$CUDA_DIR/bin/nvcc" ]; then
     CUDA_KEYRING=$(mktemp)
     curl -fL --retry 3 -o "$CUDA_KEYRING" \
@@ -208,7 +170,7 @@ export PATH="$CUDA_DIR/bin:$BIN_DIR:$HOME/.bun/bin:$PATH"
 "$CUDA_DIR/bin/nvcc" --version >/dev/null 2>&1 || die "CUDA 13.1 was installed but nvcc cannot start."
 success "CUDA 13.1 is ready"
 
-log "Provisioning classified NInfer core"
+log "Ensuring NInfer source is available"
 if git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     info "Using existing checkout: $REPO_DIR"
 else
@@ -226,7 +188,7 @@ else
 fi
 success "NInfer source is ready"
 
-log "Compiling neural inference engine"
+log "Ensuring NInfer server is built"
 if [ ! -x "$SERVER" ]; then
     info "Building Release binary; this can take 15-30 minutes."
     if [ -f "$REPO_DIR/build/CMakeCache.txt" ]; then
@@ -241,7 +203,7 @@ fi
 [ -x "$SERVER" ] || die "NInfer build completed without producing $SERVER."
 success "NInfer server is ready"
 
-log "Uploading Qwen3.8-27B NVFP4 model core"
+log "Ensuring Qwen3.8-27B NVFP4 model is downloaded"
 mkdir -p "$(dirname "$MODEL")"
 CURRENT_MODEL_SIZE=0
 if [ -f "$MODEL" ]; then
@@ -261,7 +223,7 @@ if ! printf '%s  %s\n' "$MODEL_SHA256" "$MODEL" | sha256sum --check --status 2>/
 fi
 success "Model verified: $MODEL"
 
-log "Installing operator command interface"
+log "Installing the ninfer command"
 mkdir -p "$BIN_DIR"
 cat > "$NINFER_BIN" <<'NINFER_COMMAND'
 #!/bin/sh
@@ -279,26 +241,6 @@ LOG_FILE="$STATE_DIR/server.log"
 PID_FILE="$STATE_DIR/server.pid"
 HEALTH_URL="http://127.0.0.1:8080/v1/models"
 
-if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
-    RESET=$(printf '\033[0m')
-    BOLD=$(printf '\033[1m')
-    CYAN=$(printf '\033[36m')
-    MAGENTA=$(printf '\033[35m')
-    GREEN=$(printf '\033[32m')
-    YELLOW=$(printf '\033[33m')
-    RED=$(printf '\033[31m')
-    DIM=$(printf '\033[2m')
-else
-    RESET=''
-    BOLD=''
-    CYAN=''
-    MAGENTA=''
-    GREEN=''
-    YELLOW=''
-    RED=''
-    DIM=''
-fi
-
 usage() {
     cat <<'EOF'
 Usage: ninfer [serve|status|stop]
@@ -311,24 +253,16 @@ EOF
 }
 
 die() {
-    printf '%s❌ BLACKWALL NODE:%s %s\n' "$RED" "$RESET" "$*" >&2
+    printf 'ninfer: %s\n' "$*" >&2
     exit 1
 }
 
 info() {
-    printf '%s  · %s%s\n' "$DIM" "$*" "$RESET"
+    printf '  %s\n' "$*"
 }
 
 success() {
-    printf '%s  ✅ [ONLINE] %s%s\n' "$GREEN" "$*" "$RESET"
-}
-
-boot_banner() {
-    printf '\n%s%s╭────────────────────────────────────────────────────╮%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s│  A R A S A K A  //  BLACKWALL NODE                 │%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s│  🤖 NEURAL CORE HANDSHAKE  //  OPERATOR ACCESS      │%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s│  ⚡ RTX 5090 · Qwen3.8 27B · 240K CONTEXT           │%s\n' "$BOLD" "$MAGENTA" "$RESET"
-    printf '%s%s╰────────────────────────────────────────────────────╯%s\n' "$BOLD" "$MAGENTA" "$RESET"
+    printf '  [OK] %s\n' "$*"
 }
 
 healthy() {
@@ -341,7 +275,7 @@ server_process_exists() {
 
 show_log_tail() {
     if [ -f "$LOG_FILE" ]; then
-        printf '\n%s⚠️  Blackwall diagnostic trace:%s\n' "$YELLOW" "$RESET" >&2
+        printf '\nLast server log lines:\n' >&2
         tail -n 30 "$LOG_FILE" >&2
     fi
 }
@@ -365,7 +299,7 @@ wait_until_ready() {
         fi
         if [ -t 1 ]; then
             ELAPSED=$((ATTEMPT * 5))
-            printf '\r%s⏳ Establishing neural link... %ss elapsed%s' "$YELLOW" "$ELAPSED" "$RESET"
+            printf '\r\033[KLoading model... %ss elapsed' "$ELAPSED"
         fi
         ATTEMPT=$((ATTEMPT + 1))
         sleep 5
@@ -376,17 +310,17 @@ wait_until_ready() {
 
 ensure_service() {
     if healthy; then
-        success "Blackwall node already online at $HEALTH_URL"
+        printf 'NInfer service is ready at %s\n' "$HEALTH_URL"
         return 0
     fi
 
     if server_process_exists; then
-        info "Neural core is already booting; synchronizing with the runtime..."
+        printf 'NInfer is loading; waiting for it to become ready...\n'
     else
         [ -x "$SERVER" ] || die "server binary is missing; re-run the installer"
         [ -s "$MODEL" ] || die "model is missing; re-run the installer"
         mkdir -p "$STATE_DIR"
-        info "Uploading model core; neural handshake normally takes 1-3 minutes."
+        printf 'Starting NInfer; loading the model normally takes 1-3 minutes...\n'
         nohup "$SERVER" "$MODEL" \
             --host 127.0.0.1 \
             --port 8080 \
@@ -411,15 +345,15 @@ ensure_service() {
     if ! wait_until_ready; then
         rm -f "$PID_FILE"
         show_log_tail
-        die "neural link did not establish within 10 minutes"
+        die "service did not become ready within 10 minutes"
     fi
-    success "Blackwall node online at $HEALTH_URL"
+    printf 'NInfer service is ready at %s\n' "$HEALTH_URL"
 }
 
 stop_service() {
     if ! server_process_exists; then
         rm -f "$PID_FILE"
-        info "Blackwall node is already offline."
+        printf 'NInfer service is not running.\n'
         return 0
     fi
     pkill -TERM -f -- "$SERVER" 2>/dev/null || true
@@ -432,13 +366,12 @@ stop_service() {
         pkill -KILL -f -- "$SERVER" 2>/dev/null || true
     fi
     rm -f "$PID_FILE"
-    success "Blackwall node offline; VRAM released."
+    printf 'NInfer service stopped.\n'
 }
 
 COMMAND="${1:-}"
 case "$COMMAND" in
     "")
-        boot_banner
         ensure_service
         if [ -x "$HOME/.local/bin/omp" ]; then
             OMP="$HOME/.local/bin/omp"
@@ -453,18 +386,17 @@ case "$COMMAND" in
         printf 'Run ninfer from an interactive WSL terminal to open OMP.\n'
         ;;
     serve)
-        boot_banner
         ensure_service
         ;;
     status)
         if healthy; then
-            success "Node: online ($HEALTH_URL)"
+            printf 'Service: ready (%s)\n' "$HEALTH_URL"
             STATUS=0
         elif server_process_exists; then
-            info "Node: process running but neural link is not ready"
+            printf 'Service: process running but endpoint is not ready\n'
             STATUS=1
         else
-            printf '%s○ Node: offline%s\n' "$DIM" "$RESET"
+            printf 'Service: stopped\n'
             STATUS=1
         fi
         nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/dev/null || true
@@ -584,13 +516,10 @@ else
     fi
 fi
 
-printf '\n%s%s╔════════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$GREEN" "$RESET"
-printf '%s%s║   ✅ BLACKWALL NODE DEPLOYMENT COMPLETE                   ║%s\n' "$BOLD" "$GREEN" "$RESET"
-printf '%s%s║   Operator access granted. Neural core standing by.       ║%s\n' "$BOLD" "$GREEN" "$RESET"
-printf '%s%s╚════════════════════════════════════════════════════════════╝%s\n' "$BOLD" "$GREEN" "$RESET"
-printf '%s  ninfer         connect to the node and open OMP%s\n' "$DIM" "$RESET"
-printf '%s  ninfer status  inspect node health and GPU state%s\n' "$DIM" "$RESET"
-printf '%s  ninfer stop    terminate the node and release VRAM%s\n' "$DIM" "$RESET"
+printf '\nInstallation complete. Daily command: ninfer\n'
+printf '  ninfer         start the service and open OMP\n'
+printf '  ninfer status  check service and GPU state\n'
+printf '  ninfer stop    stop the service and release VRAM\n'
 
 if [ "$NO_LAUNCH" -eq 1 ]; then
     printf '\nLaunch later with: ninfer\n'
