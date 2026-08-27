@@ -272,13 +272,16 @@ ensure_service() {
         nohup "$SERVER" "$MODEL" \
             --host 127.0.0.1 \
             --port 8080 \
-            --max-context 131072 \
-            --kv-capacity 131072 \
+            --max-context 240000 \
+            --kv-capacity 240000 \
             --max-concurrency 2 \
             --max-pending-requests 16 \
             --pending-timeout-ms 600000 \
             --prefill-chunk 1024 \
-            --kv-dtype int8 \
+            --kv-dtype fp8 \
+            --device-state-slots 2 \
+            --host-state-slots 8 \
+            --host-kv-mib 8192 \
             --spec mtp \
             --draft-tokens 3 \
             --lm-head-draft \
@@ -400,7 +403,7 @@ providers:
         input:
           - text
         tokenizer: qwen3
-        contextWindow: 131072
+        contextWindow: 240000
         maxTokens: 8192
 EOF
 if [ -f "$MODELS_FILE" ] && cmp -s "$MODELS_TMP" "$MODELS_FILE"; then

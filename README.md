@@ -79,23 +79,26 @@ The generated `ninfer` command launches this text-only server profile:
 ninfer-serve qwen3_8_27b_nvfp4.ninfer \
   --host 127.0.0.1 \
   --port 8080 \
-  --max-context 131072 \
-  --kv-capacity 131072 \
+  --max-context 240000 \
+  --kv-capacity 240000 \
   --max-concurrency 2 \
   --max-pending-requests 16 \
   --pending-timeout-ms 600000 \
   --prefill-chunk 1024 \
-  --kv-dtype int8 \
+  --kv-dtype fp8 \
+  --device-state-slots 2 \
+  --host-state-slots 8 \
+  --host-kv-mib 8192 \
   --spec mtp \
   --draft-tokens 3 \
   --lm-head-draft \
   --preserve-thinking
 ```
 
-The profile is intentionally conservative for a 32 GB card shared with Windows through WSL:
+The profile follows the current NInfer README profile for a 32 GB RTX 5090:
 
-- `--max-context` and `--kv-capacity` provide a fixed 131,072-token per-request ceiling and shared Main Text KV pool;
-- INT8 group-64 KV is the published NInfer measurement profile for this artifact;
+- `--max-context` and `--kv-capacity` provide a fixed 240,000-token per-request ceiling and shared Main Text KV pool;
+- FP8 KV reduces device-memory pressure while the host state slots and 8 GiB host KV allowance provide additional cache capacity;
 - two active request lanes allow modest batching while keeping startup memory bounded;
 - MTP3 plus the optimized draft head improves decode throughput on suitable workloads;
 - CUDA Graph decode remains enabled for the Blackwell profile;
@@ -103,7 +106,7 @@ The profile is intentionally conservative for a 32 GB card shared with Windows t
 - `--vision` is omitted so the interactive coding profile does not reserve Vision allocations;
 - loopback binding keeps the unauthenticated API local to the WSL instance.
 
-The native model context is larger, but 131,072 tokens leaves practical startup headroom for WSL, the resident NVFP4 weights, MTP state, and CUDA runtime allocations. Increase the limits only after validating available VRAM on the target machine.
+The 240,000-token setting is the upstream documented profile and is more aggressive than the original 131,072-token setup. Actual available VRAM still depends on Windows GPU usage and WSL memory state; if startup fails, inspect `~/.local/state/ninfer/server.log` and stop other GPU workloads before retrying.
 
 ## OMP configuration
 
@@ -122,7 +125,7 @@ providers:
         input:
           - text
         tokenizer: qwen3
-        contextWindow: 131072
+        contextWindow: 240000
         maxTokens: 8192
 ```
 
