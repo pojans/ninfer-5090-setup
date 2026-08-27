@@ -62,7 +62,7 @@ The service log is written to `~/.local/state/ninfer/server.log`.
 1. Rejects native Windows, native Linux, non-RTX-5090 GPUs, and insufficient disk space.
 2. Installs missing build packages: `build-essential`, `cmake`, `ninja-build`, `git`, `curl`, `ca-certificates`, `procps`, `pkg-config`, FFmpeg development headers, and libcurl development headers.
 3. Installs the NVIDIA WSL CUDA 13.1 toolkit if `/usr/local/cuda-13.1/bin/nvcc` is missing.
-4. Clones [`Neroued/ninfer`](https://github.com/Neroued/ninfer) and pins a fresh checkout to commit [`2190c4a1ab14988a453482cd30c2651c8ea2600d`](https://github.com/Neroued/ninfer/commit/2190c4a1ab14988a453482cd30c2651c8ea2600d).
+4. Clones [`Neroued/ninfer`](https://github.com/Neroued/ninfer) and pins a fresh checkout to commit [`6e8b2e2ad5d53597c3ba8e7989f9546d40b921fc`](https://github.com/Neroued/ninfer/commit/6e8b2e2ad5d53597c3ba8e7989f9546d40b921fc).
 5. Builds the Release binaries with CMake and Ninja.
 6. Downloads `qwen3_8_27b_nvfp4.ninfer` from pinned Hugging Face revision [`3b84117e0fd258b45bd79778ec8d8f27a4ab3d56`](https://huggingface.co/neroued/Qwen3.8-27B-nvfp4-NInfer/commit/3b84117e0fd258b45bd79778ec8d8f27a4ab3d56).
 7. Verifies the artifact's exact size: `21,492,695,040` bytes (20.02 GiB) and SHA-256: `bb3360522a06e136e0367f5703414d26272b7285c8a6ab6194135c17dbd81b32`.
@@ -200,7 +200,7 @@ The service is intentionally persistent across OMP sessions so reopening OMP doe
 ## Source documentation
 
 - [NInfer](https://github.com/Neroued/ninfer)
-- [Pinned NInfer revision](https://github.com/Neroued/ninfer/tree/2190c4a1ab14988a453482cd30c2651c8ea2600d)
+- [Pinned NInfer revision](https://github.com/Neroued/ninfer/tree/6e8b2e2ad5d53597c3ba8e7989f9546d40b921fc)
 - [NInfer CLI guide](https://github.com/Neroued/ninfer/blob/master/docs/cli.md)
 - [NInfer serving guide](https://github.com/Neroued/ninfer/blob/master/docs/serving.md)
 - [Qwen3.8-27B NVFP4 model card](https://huggingface.co/neroued/Qwen3.8-27B-nvfp4-NInfer)

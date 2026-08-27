@@ -11,7 +11,7 @@ set -eu
 
 NINFER_REPO_URL="https://github.com/Neroued/ninfer.git"
 NINFER_BRANCH="master"
-NINFER_REV="2190c4a1ab14988a453482cd30c2651c8ea2600d"
+NINFER_REV="6e8b2e2ad5d53597c3ba8e7989f9546d40b921fc"
 REPO_DIR="$HOME/projects/ninfer-5090"
 SERVER="$REPO_DIR/build/apps/ninfer-serve"
 MODEL="$REPO_DIR/models/qwen3_8_27b_nvfp4.ninfer"
