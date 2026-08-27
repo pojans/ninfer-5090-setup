@@ -26,6 +26,12 @@ To provision without starting NInfer or opening OMP:
 curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh -s -- --no-launch
 ```
 
+To preview the themed terminal experience without changing the system:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh -s -- --preview
+```
+
 ## Requirements
 
 - Windows 11 with WSL2;

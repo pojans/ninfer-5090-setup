@@ -23,6 +23,7 @@ OMP_VERSION="v18.0.4"
 BIN_DIR="$HOME/.local/bin"
 NINFER_BIN="$BIN_DIR/ninfer"
 NO_LAUNCH=0
+PREVIEW=0
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
     RESET=$(printf '\033[0m')
@@ -48,10 +49,13 @@ fi
 
 usage() {
     cat <<'EOF'
-Usage: install.sh [--no-launch]
+Usage: install.sh [--no-launch] [--preview]
 
 Installs NInfer-5090, its Qwen3.8-27B NVFP4 model, CUDA 13.1, and Oh My Pi in WSL2.
 By default the installer starts NInfer and opens the OMP TUI when finished.
+
+  --no-launch  Provision without starting NInfer or opening OMP.
+  --preview     Show the terminal presentation without changing the system.
 EOF
 }
 
@@ -87,6 +91,9 @@ while [ "$#" -gt 0 ]; do
         --no-launch)
             NO_LAUNCH=1
             ;;
+        --preview)
+            PREVIEW=1
+            ;;
         -h|--help)
             usage
             exit 0
@@ -99,6 +106,23 @@ while [ "$#" -gt 0 ]; do
 done
 
 banner
+
+if [ "$PREVIEW" -eq 1 ]; then
+    log "Preview mode engaged"
+    info "No system changes will be made. Rendering the operator interface only."
+    success "Hardware perimeter authenticated: RTX 5090"
+    success "Blackwall node dependencies staged"
+    success "CUDA 13.1 compute layer initialized"
+    success "Qwen3.8-27B NVFP4 model core ready"
+    info "Establishing neural link..."
+    printf '%s⏳ Neural core loading... 00:42 elapsed%s\n' "$YELLOW" "$RESET"
+    success "Blackwall node online at http://127.0.0.1:8080/v1/models"
+    printf '\n%s%s╔════════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$GREEN" "$RESET"
+    printf '%s%s║   ✅ BLACKWALL NODE DEPLOYMENT COMPLETE                   ║%s\n' "$BOLD" "$GREEN" "$RESET"
+    printf '%s%s║   Preview complete. No files or services were changed.    ║%s\n' "$BOLD" "$GREEN" "$RESET"
+    printf '%s%s╚════════════════════════════════════════════════════════════╝%s\n' "$BOLD" "$GREEN" "$RESET"
+    exit 0
+fi
 
 if [ "$(id -u)" -eq 0 ]; then
     SUDO=""
