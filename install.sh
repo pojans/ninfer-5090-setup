@@ -1,22 +1,23 @@
 #!/bin/sh
-# NInfer-4090 + Oh My Pi installer for WSL2 Ubuntu.
+# NInfer-5090 + Oh My Pi installer for WSL2 Ubuntu.
 #
 # Install:
-#   curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-4090-setup/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh
 #
 # Re-running this installer is safe. Use --no-launch to provision without
 # starting the service or opening the OMP TUI.
 
 set -eu
 
-NINFER_REPO_URL="https://github.com/sergiuszm/ninfer-4090.git"
-NINFER_BRANCH="rtx4090-port"
-NINFER_REV="981b685ea2124fdaed023123d2e63fd29d529ab8"
-REPO_DIR="$HOME/projects/ninfer-4090"
+NINFER_REPO_URL="https://github.com/Neroued/ninfer.git"
+NINFER_BRANCH="master"
+NINFER_REV="2190c4a1ab14988a453482cd30c2651c8ea2600d"
+REPO_DIR="$HOME/projects/ninfer-5090"
 SERVER="$REPO_DIR/build/apps/ninfer-serve"
-MODEL="$REPO_DIR/models/qwen3_8_27b.ninfer"
-MODEL_SIZE="18210531328"
-MODEL_URL="https://huggingface.co/neroued/Qwen3.8-27B-NInfer/resolve/18dfc887423fa5aabf3cb56fac41490e462b3fab/qwen3_8_27b.ninfer"
+MODEL="$REPO_DIR/models/qwen3_8_27b_nvfp4.ninfer"
+MODEL_SIZE="21492695040"
+MODEL_SHA256="bb3360522a06e136e0367f5703414d26272b7285c8a6ab6194135c17dbd81b32"
+MODEL_URL="https://huggingface.co/neroued/Qwen3.8-27B-nvfp4-NInfer/resolve/3b84117e0fd258b45bd79778ec8d8f27a4ab3d56/qwen3_8_27b_nvfp4.ninfer"
 CUDA_DIR="/usr/local/cuda-13.1"
 OMP_VERSION="v18.0.4"
 BIN_DIR="$HOME/.local/bin"
@@ -27,7 +28,7 @@ usage() {
     cat <<'EOF'
 Usage: install.sh [--no-launch]
 
-Installs NInfer-4090, its Qwen3.8-27B model, CUDA 13.1, and Oh My Pi in WSL2.
+Installs NInfer-5090, its Qwen3.8-27B NVFP4 model, CUDA 13.1, and Oh My Pi in WSL2.
 By default the installer starts NInfer and opens the OMP TUI when finished.
 EOF
 }
@@ -82,8 +83,8 @@ if ! GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | 
     die "The NVIDIA GPU is not visible in WSL. Update the Windows NVIDIA driver and restart WSL."
 fi
 case "$GPU_NAME" in
-    *"RTX 4090"*) ;;
-    *) die "This profile requires an RTX 4090; WSL reported: $GPU_NAME" ;;
+    *"RTX 5090"*) ;;
+    *) die "This profile requires an RTX 5090; WSL reported: $GPU_NAME" ;;
 esac
 printf '    GPU: %s\n' "$GPU_NAME"
 
@@ -109,7 +110,8 @@ printf '    Free disk: %s GB\n' "$AVAILABLE_GB"
 
 log "Installing build dependencies"
 MISSING_PACKAGES=""
-for PACKAGE in build-essential cmake ninja-build git curl ca-certificates procps; do
+for PACKAGE in build-essential cmake ninja-build git curl ca-certificates procps pkg-config \
+    libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libcurl4-openssl-dev; do
     if ! dpkg-query -W -f='${Status}' "$PACKAGE" 2>/dev/null | grep -q 'ok installed'; then
         MISSING_PACKAGES="$MISSING_PACKAGES $PACKAGE"
     fi
@@ -170,7 +172,7 @@ else
 fi
 [ -x "$SERVER" ] || die "NInfer build completed without producing $SERVER."
 
-log "Ensuring Qwen3.8-27B model is downloaded"
+log "Ensuring Qwen3.8-27B NVFP4 model is downloaded"
 mkdir -p "$(dirname "$MODEL")"
 CURRENT_MODEL_SIZE=0
 if [ -f "$MODEL" ]; then
@@ -180,11 +182,14 @@ if [ "$CURRENT_MODEL_SIZE" -gt "$MODEL_SIZE" ]; then
     die "$MODEL is larger than the verified model. Move it aside and re-run this installer."
 fi
 if [ "$CURRENT_MODEL_SIZE" -lt "$MODEL_SIZE" ]; then
-    printf '    Downloading 16.96 GiB; interrupted downloads resume on the next run.\n'
+    printf '    Downloading 20.02 GiB; interrupted downloads resume on the next run.\n'
     curl -fL -C - --retry 5 --retry-delay 5 -o "$MODEL" "$MODEL_URL"
 fi
 CURRENT_MODEL_SIZE=$(wc -c < "$MODEL" | tr -d ' ')
 [ "$CURRENT_MODEL_SIZE" -eq "$MODEL_SIZE" ] || die "Model download is incomplete: expected $MODEL_SIZE bytes, found $CURRENT_MODEL_SIZE. Re-run the installer to resume."
+if ! printf '%s  %s\n' "$MODEL_SHA256" "$MODEL" | sha256sum --check --status 2>/dev/null; then
+    die "Model SHA-256 verification failed for $MODEL; remove the file and re-run the installer."
+fi
 printf '    Model ready: %s\n' "$MODEL"
 
 log "Installing the ninfer command"
@@ -197,9 +202,9 @@ set -eu
 export PATH="/usr/local/cuda-13.1/bin:$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 export CUDA_HOME="/usr/local/cuda-13.1"
 
-REPO_DIR="$HOME/projects/ninfer-4090"
+REPO_DIR="$HOME/projects/ninfer-5090"
 SERVER="$REPO_DIR/build/apps/ninfer-serve"
-MODEL="$REPO_DIR/models/qwen3_8_27b.ninfer"
+MODEL="$REPO_DIR/models/qwen3_8_27b_nvfp4.ninfer"
 STATE_DIR="$HOME/.local/state/ninfer"
 LOG_FILE="$STATE_DIR/server.log"
 PID_FILE="$STATE_DIR/server.pid"
@@ -267,17 +272,17 @@ ensure_service() {
         nohup "$SERVER" "$MODEL" \
             --host 127.0.0.1 \
             --port 8080 \
-            --max-context 114688 \
-            --kv-capacity 114688 \
-            --max-concurrency 1 \
+            --max-context 131072 \
+            --kv-capacity 131072 \
+            --max-concurrency 2 \
             --max-pending-requests 16 \
             --pending-timeout-ms 600000 \
-            --prefill-chunk 512 \
+            --prefill-chunk 1024 \
             --kv-dtype int8 \
             --spec mtp \
             --draft-tokens 3 \
             --lm-head-draft \
-            --no-cuda-graph \
+            --preserve-thinking \
             </dev/null >>"$LOG_FILE" 2>&1 &
         printf '%s\n' "$!" > "$PID_FILE"
     fi
@@ -357,10 +362,10 @@ NINFER_COMMAND
 chmod 755 "$NINFER_BIN"
 
 BASHRC="$HOME/.bashrc"
-if ! grep -Fq '# ninfer-4090-setup PATH' "$BASHRC" 2>/dev/null; then
+if ! grep -Fq '# ninfer-5090-setup PATH' "$BASHRC" 2>/dev/null; then
     cat >> "$BASHRC" <<'EOF'
 
-# ninfer-4090-setup PATH
+# ninfer-5090-setup PATH
 export PATH="$HOME/.local/bin:$PATH"
 EOF
 fi
@@ -390,12 +395,12 @@ providers:
     auth: none
     models:
       - id: qwen3.8-27b
-        name: Qwen3.8 27B (NInfer)
+        name: Qwen3.8 27B NVFP4 (NInfer)
         reasoning: true
         input:
           - text
         tokenizer: qwen3
-        contextWindow: 114688
+        contextWindow: 131072
         maxTokens: 8192
 EOF
 if [ -f "$MODELS_FILE" ] && cmp -s "$MODELS_TMP" "$MODELS_FILE"; then
@@ -408,7 +413,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     cat > "$CONFIG_FILE" <<'EOF'
 modelRoles:
   default: llama.cpp/qwen3.8-27b:xhigh
-setupVersion: 2
+setupVersion: 3
 EOF
 else
     CONFIG_TMP="$CONFIG_FILE.tmp.$$"
@@ -448,10 +453,10 @@ else
 
     if grep -q '^setupVersion:' "$CONFIG_FILE"; then
         CONFIG_TMP="$CONFIG_FILE.tmp.$$"
-        awk '/^setupVersion:/ { print "setupVersion: 2"; next } { print }' "$CONFIG_FILE" > "$CONFIG_TMP"
+        awk '/^setupVersion:/ { print "setupVersion: 3"; next } { print }' "$CONFIG_FILE" > "$CONFIG_TMP"
         mv "$CONFIG_TMP" "$CONFIG_FILE"
     else
-        printf '\nsetupVersion: 2\n' >> "$CONFIG_FILE"
+        printf '\nsetupVersion: 3\n' >> "$CONFIG_FILE"
     fi
 fi
 
