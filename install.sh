@@ -2,7 +2,7 @@
 # NInfer-5090 + Oh My Pi installer for WSL2 Ubuntu.
 #
 # Install:
-#   curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh
+#   curl -fsSL https://github.com/pojans/ninfer-5090-setup/raw/refs/heads/main/install.sh | sh
 #
 # Re-running this installer is safe. Use --no-launch to provision without
 # starting the service or opening the OMP TUI.

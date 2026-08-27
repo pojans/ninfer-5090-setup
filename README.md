@@ -15,7 +15,7 @@ This repository is the RTX 5090 counterpart to [`pojans/ninfer-4090-setup`](http
 Run this inside an Ubuntu WSL2 terminal:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh
+curl -fsSL https://github.com/pojans/ninfer-5090-setup/raw/refs/heads/main/install.sh | sh
 ```
 
 The installer provisions everything, starts NInfer, waits for the API to become healthy, and launches OMP with `Qwen3.8 27B NVFP4 (NInfer) · xhigh` selected.
@@ -23,13 +23,13 @@ The installer provisions everything, starts NInfer, waits for the API to become 
 To provision without starting NInfer or opening OMP:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh -s -- --no-launch
+curl -fsSL https://github.com/pojans/ninfer-5090-setup/raw/refs/heads/main/install.sh | sh -s -- --no-launch
 ```
 
 To preview the themed terminal experience without changing the system:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/pojans/ninfer-5090-setup/main/install.sh | sh -s -- --preview
+curl -fsSL https://github.com/pojans/ninfer-5090-setup/raw/refs/heads/main/install.sh | sh -s -- --preview
 ```
 
 ## Requirements
