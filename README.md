@@ -46,6 +46,8 @@ ninfer
 
 `ninfer` checks `http://127.0.0.1:8080/v1/models`. If the endpoint is not healthy, it starts `ninfer-serve` in the background and waits up to ten minutes for model loading. It then launches OMP in the same terminal.
 
+Interactive install and startup output uses an Arasaka/Blackwall-inspired terminal presentation. Set `NO_COLOR=1` for plain output in scripts or logs.
+
 Other commands:
 
 ```sh
